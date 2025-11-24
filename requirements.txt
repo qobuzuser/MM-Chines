@@ -1,0 +1,6 @@
+python-telegram-bot
+google-generativeai
+pydub
+python-dotenv
+ffmpeg-python
+requests
