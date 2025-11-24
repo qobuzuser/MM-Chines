@@ -5,8 +5,7 @@ import google.generativeai as genai
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 # Safety settings ကို လျှော့ပြီး အမှားမထွက်အောင် လုပ်ထားတယ်
-model = genai.GenerativeModel(
-    "gemini-1.5-flash",
+model = genai.GenerativeModel("gemini-2.0-flash-exp"),
     safety_settings=[
         {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_ONLY_HIGH"},
         {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_ONLY_HIGH"},
