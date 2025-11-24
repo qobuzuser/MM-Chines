@@ -1,61 +1,53 @@
 import os
 import google.generativeai as genai
 
-# API Key ထည့်ပေးတယ်
+# API Key ထည့်တယ်
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-# Safety settings ကို လျှော့ပြီး အမှားမထွက်အောင် လုပ်ထားတယ်
-model = genai.GenerativeModel("gemini-2.0-flash-exp"),
-    safety_settings=[
-        {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_ONLY_HIGH"},
-        {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_ONLY_HIGH"},
-        {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_ONLY_HIGH"},
-        {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_ONLY_HIGH"},
-    ]
-)
+# မြန်မာကနေ အခမဲ့ အလုပ်ဖြစ်တဲ့ တစ်ခုတည်းသော model (2025 အခုထိ)
+model = genai.GenerativeModel("gemini-2.0-flash-exp")
 
 def safe_generate(prompt: str) -> str:
     try:
         response = model.generate_content(
             prompt,
-            generation_config={
-                "temperature": 0.7,
-                "max_output_tokens": 1000,
-            }
+            generation_config=genai.GenerationConfig(
+                temperature=0.7,
+                max_output_tokens=1000
+            )
         )
-        # အဖြေ မရှိရင် ဒါမှမဟုတ် ပိတ်ထားရင် ဒီလို ပြန်ပေးမယ်
-        if not response.candidates or len(response.candidates[0].content.parts) == 0:
-            return "ယာယီ အဖြေ မထုတ်နိုင်ပါ။ စကားလုံးကို နည်းနည်း ပြန်ရေးကြည့်ပါနော် 😊"
+        # အဖြေ မရှိရင် လှပစွာ ပြန်ပေးမယ်
+        if not response.text or not response.text.strip():
+            return "အခုချိန်လေးမှာ နည်းနည်းရှုပ်နေတယ် 😅\nနောက်တစ်ခါ ထပ်မေးကြည့်ပါနော်၊ ချက်ချင်း ကူညီပေးပါမယ်!"
         return response.text.strip()
     except Exception as e:
-        return "ယာယီ ချို့ယွင်းနေပါသည်။ ခဏနေပြီး ထပ်ကြိုးစားပါ။"
+        # ဘယ်လို error ပဲ ဖြစ်ဖြစ် ဒီစာသားပဲ ပေါမယ်
+        return "အိုး... ခဏနေပြီး ထပ်မေးကြည့်ပါနော် 🥺\nကျွန်တော် ချက်ချင်း ပြန်လာခဲ့မယ်!"
 
-# သာမန် ဘာသာပြန် + အသံထွက် + ဥပမာ
 def get_translation(text: str) -> str:
     prompt = f"""
     အောက်ပါ စာသားကို တရုတ် ↔ မြန်မာ အပြန်အလှန် ဘာသာပြန်ပေးပါ။
-    ဘာသာစကား အလိုအလျောက် သိပြီး ဆန့်ကျင်ဘက် ဘာသာနဲ့ ဖြေပါ။
-    အောက်ပါ format အတိုင်း လှပစွာ ရေးပါ:
+    ဘာသာစကား အလိုအလျောက် သိပြီး ဆန့်ကျင်ဘက်ဘာသာနဲ့ ဖြေပါ။
+    အောက်ပါ format အတိုင်း လှပစွာ ရေးပါ။ emoji သုံးပြီး နွေးထွေးအောင် လုပ်ပါ။
 
-    🇨🇳 Translation: ...
-    🔊 Pronunciation: ... (Pinyin သို့မဟုတ် မြန်မာ အသံထွက်)
-    📖 Meaning: ...
-    💡 Example: ...
+    Translation: ...
+    Pronunciation: ...
+    Meaning: ...
+    Example: ...
 
     စာသား: "{text}"
     """
     return safe_generate(prompt)
 
-# More Explanation ခလုတ်အတွက်
 def get_explanation(text: str) -> str:
     prompt = f"""
-    အောက်ပါ စကားလုံး/စကားစုကို အသေးစိတ် ရှင်းပြပါ။
-    တရုတ်ဆိုရင် မြန်မာလို၊ မြန်မာဆိုရင် တရုတ်လို ဖြေပါ။
+    အောက်ပါ စကားလုံး/စာကြောင်းကို အသေးစိတ် ရှင်းပြပါ။
+    တရုတ်စာဆိုရင် မြန်မာလို၊ မြန်မာစာဆိုရင် တရုတ်လို ဖြေပါ။
+    အောက်ပါအချက်များ ထည့်ပေးပါ။
 
-    ထည့်ပေးရမယ့်အချက်များ:
     • အဓိပ္ပာယ် အသေးစိတ်
-    • အသံထွက် (Pinyin သို့မဟုတ် မြန်မာ အသံထွက်)
-    • သဒ္ဒါပိုင်း
+    • အသံထွက် (Pinyin သို့မဟုတ် မြန်မာ အတိုင်း)
+    • သဒ္ဒါပိုင်း (Grammar)
     • တကယ့်ဘဝမှာ သုံးပုံ ၂-၃ ခု
     • ဆင်တူစကားလုံး ၃-၅ ခု
 
